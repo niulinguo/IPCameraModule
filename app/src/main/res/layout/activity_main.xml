@@ -18,6 +18,11 @@
         android:onClick="onButtonClicked"
         android:text="拍照"/>
 
+    <!--<VideoView-->
+    <!--android:id="@+id/vv_video"-->
+    <!--android:layout_width="match_parent"-->
+    <!--android:layout_height="200dp"/>-->
+
     <ImageView
         android:id="@+id/iv_image"
         android:layout_width="match_parent"

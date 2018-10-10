@@ -33,6 +33,8 @@ public class MainActivity extends AppCompatActivity {
     private TextView mTextView;
     private ImageView mImageView;
 
+//    private VideoView mVideoView;
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -40,6 +42,7 @@ public class MainActivity extends AppCompatActivity {
 
         mTextView = findViewById(R.id.tv_text);
         mImageView = findViewById(R.id.iv_image);
+//        mVideoView = findViewById(R.id.vv_video);
 
         HotspotManager manager = new HotspotManager();
         manager.refresh();
@@ -76,9 +79,40 @@ public class MainActivity extends AppCompatActivity {
         ApiManager.setHttpManager(httpManager);
         ApiManager.setUsername("admin");
         ApiManager.setPassword("admin");
+
+//        ApiManager.getHttpPort().enqueue(new Callback<String>() {
+//            @Override
+//            public void onResponse(Call<String> call, Response<String> response) {
+//                String body = response.body();
+//                Log.e("result", body);
+//            }
+//
+//            @Override
+//            public void onFailure(Call<String> call, Throwable t) {
+//
+//            }
+//        });
     }
 
     public void onButtonClicked(View view) {
+
+//        String url = "http://" + mTextView.getText().toString() + "/livestream/11?action=play&media=video";
+//        url = "http://clips.vorwaerts-gmbh.de/big_buck_bunny.mp4";
+//        url = "http://ivi.bupt.edu.cn/hls/cctv5phd.m3u8";
+//        HashMap<String, String> headers = new HashMap<>();
+//        headers.put("User-Agent", "HiIpcam/V100R003 VodClient/1.0.0");
+//        headers.put("Connection", "Keep-Alive");
+//        headers.put("Cache-Control", "no-cache");
+//        headers.put("Authorization", "admin admin");
+//        headers.put("Content-Length", "65535");
+//        headers.put("Cseq", "1");
+//        headers.put("Transport", "RTP/AVP/TCP;unicast;interleaved=0-1");
+//        mVideoView.setVideoURI(Uri.parse(url), headers);
+//        mVideoView.set();
+//        mVideoView.setVideoURI(Uri.parse(url));
+//        mVideoView.start();
+
+
         ApiManager.snapImage().enqueue(new Callback<String>() {
             @Override
             public void onResponse(@NonNull Call<String> call, @NonNull Response<String> response) {

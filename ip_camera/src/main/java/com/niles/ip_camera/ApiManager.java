@@ -56,4 +56,8 @@ public class ApiManager {
         options.put("-pwd", sPassword);
         return sHttpManager.createService(CgiService.class).getSnapImage(options);
     }
+
+    public static Call<String> getHttpPort() {
+        return paramCgi("gethttpport", null);
+    }
 }
