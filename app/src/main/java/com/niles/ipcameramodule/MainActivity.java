@@ -1,16 +1,26 @@
 package com.niles.ipcameramodule;
 
+import android.graphics.Bitmap;
+import android.graphics.BitmapFactory;
 import android.os.Bundle;
 import android.support.annotation.NonNull;
 import android.support.v7.app.AppCompatActivity;
+import android.text.TextUtils;
 import android.util.Log;
+import android.view.View;
+import android.widget.ImageView;
+import android.widget.TextView;
+import android.widget.Toast;
 
 import com.niles.http.HttpConfig;
+import com.niles.http.HttpManager;
+import com.niles.http.converter.StringConverterFactory;
 import com.niles.ip_camera.ApiManager;
 
-import java.util.HashMap;
+import java.io.IOException;
 import java.util.List;
 
+import okhttp3.ResponseBody;
 import okhttp3.logging.HttpLoggingInterceptor;
 import retrofit2.Call;
 import retrofit2.Callback;
@@ -18,35 +28,86 @@ import retrofit2.Response;
 
 public class MainActivity extends AppCompatActivity {
 
-    private final HttpConfig mHttpConfig = new HttpConfig.Builder()
-            .setBaseUrl("http://10.0.66.222")
-            .setLogger(new HttpLoggingInterceptor.Logger() {
-                @Override
-                public void log(String message) {
-                    Log.e("http", message);
-                }
-            })
-            .build();
+    private static final String MAC = "14:6b:9c:b7:a1:f2";
+
+    private TextView mTextView;
+    private ImageView mImageView;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
 
-        ApiManager.setHttpConfig(mHttpConfig);
+        mTextView = findViewById(R.id.tv_text);
+        mImageView = findViewById(R.id.iv_image);
 
         HotspotManager manager = new HotspotManager();
         manager.refresh();
 
         List<HotspotClientInfo> infoList = manager.getInfoList();
 
-        HashMap<String, String> options = new HashMap<>();
-        options.put("-dd", "vv");
-        Call<String> call = ApiManager.paramCgi("setldcattr", options);
-        call.enqueue(new Callback<String>() {
+        String ipAddress = null;
+
+        for (HotspotClientInfo info : infoList) {
+            if (MAC.equalsIgnoreCase(info.getHWAddress())) {
+                ipAddress = info.getIPAddress();
+            }
+        }
+
+        if (TextUtils.isEmpty(ipAddress)) {
+            Toast.makeText(this, "没有找到IP_CAMERA", Toast.LENGTH_SHORT).show();
+            finish();
+            return;
+        }
+
+        mTextView.setText(ipAddress);
+
+        HttpManager httpManager = MyApp.getInstance().getHttpManager();
+        httpManager.setHttpConfig(new HttpConfig.Builder()
+                .setBaseUrl("http://" + ipAddress)
+                .addConverterFactory(StringConverterFactory.create())
+                .setLogger(new HttpLoggingInterceptor.Logger() {
+                    @Override
+                    public void log(String message) {
+                        Log.e("http", message);
+                    }
+                })
+                .build());
+        ApiManager.setHttpManager(httpManager);
+        ApiManager.setUsername("admin");
+        ApiManager.setPassword("admin");
+    }
+
+    public void onButtonClicked(View view) {
+        ApiManager.snapImage().enqueue(new Callback<String>() {
             @Override
             public void onResponse(@NonNull Call<String> call, @NonNull Response<String> response) {
-                Log.e("result", response.toString());
+                String body = response.body();
+                Log.e("result", body);
+                if ("[Succeed]get ok.".equalsIgnoreCase(body)) {
+                    ApiManager.getSnapImage().enqueue(new Callback<ResponseBody>() {
+                        @Override
+                        public void onResponse(@NonNull Call<ResponseBody> call, @NonNull Response<ResponseBody> response) {
+                            ResponseBody responseBody = response.body();
+                            if (responseBody != null) {
+                                try {
+                                    byte[] bytes = responseBody.bytes();
+                                    Bitmap bitmap = BitmapFactory.decodeByteArray(bytes, 0, bytes.length);
+                                    mImageView.setImageBitmap(bitmap);
+                                } catch (IOException e) {
+                                    e.printStackTrace();
+                                }
+                            } else {
+                                Log.e("http", "responseBody is null");
+                            }
+                        }
+
+                        @Override
+                        public void onFailure(@NonNull Call<ResponseBody> call, @NonNull Throwable t) {
+                            Log.e("result", t.getMessage());
+                        }
+                    });
+                }
             }
 
             @Override
