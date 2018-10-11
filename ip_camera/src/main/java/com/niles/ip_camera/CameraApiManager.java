@@ -13,7 +13,7 @@ import retrofit2.Call;
  * Date 2018/10/9 16:39
  * Email niulinguo@163.com
  */
-public class ApiManager {
+public class CameraApiManager {
 
     private static HttpManager sHttpManager;
     private static String sUsername;

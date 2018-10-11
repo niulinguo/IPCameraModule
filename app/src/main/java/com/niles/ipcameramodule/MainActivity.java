@@ -12,7 +12,10 @@ import android.widget.TextView;
 import android.widget.Toast;
 import android.widget.VideoView;
 
-import com.niles.ip_camera.ApiManager;
+import com.niles.http.HttpConfig;
+import com.niles.http.HttpManager;
+import com.niles.http.converter.StringConverterFactory;
+import com.niles.ip_camera.CameraApiManager;
 import com.niles.ip_camera.VideoStream;
 import com.niles.ip_camera.VideoStreamConfig;
 import com.niles.ip_camera.hotspot.HotspotClientInfo;
@@ -21,6 +24,7 @@ import com.niles.ip_camera.hotspot.HotspotManager;
 import java.io.IOException;
 
 import okhttp3.ResponseBody;
+import okhttp3.logging.HttpLoggingInterceptor;
 import retrofit2.Call;
 import retrofit2.Callback;
 import retrofit2.Response;
@@ -59,22 +63,22 @@ public class MainActivity extends AppCompatActivity {
 
         mTextView.setText(ipAddress);
 
-//        HttpManager httpManager = MyApp.getInstance().getHttpManager();
-//        httpManager.setHttpConfig(new HttpConfig.Builder()
-//                .setBaseUrl("http://" + ipAddress)
-//                .addConverterFactory(StringConverterFactory.create())
-//                .setLogger(new HttpLoggingInterceptor.Logger() {
-//                    @Override
-//                    public void log(String message) {
-//                        Log.e("http", message);
-//                    }
-//                })
-//                .build());
-//        ApiManager.setHttpManager(httpManager);
-//        ApiManager.setUsername("admin");
-//        ApiManager.setPassword("admin");
+        HttpManager httpManager = MyApp.getInstance().getHttpManager();
+        httpManager.setHttpConfig(new HttpConfig.Builder()
+                .setBaseUrl("http://" + ipAddress)
+                .addConverterFactory(StringConverterFactory.create())
+                .setLogger(new HttpLoggingInterceptor.Logger() {
+                    @Override
+                    public void log(String message) {
+                        Log.e("http", message);
+                    }
+                })
+                .build());
+        CameraApiManager.setHttpManager(httpManager);
+        CameraApiManager.setUsername("admin");
+        CameraApiManager.setPassword("admin");
 
-//        ApiManager.getHttpPort().enqueue(new Callback<String>() {
+//        CameraApiManager.getHttpPort().enqueue(new Callback<String>() {
 //            @Override
 //            public void onResponse(Call<String> call, Response<String> response) {
 //                String body = response.body();
@@ -93,7 +97,7 @@ public class MainActivity extends AppCompatActivity {
     private void autoImage() {
         mNumber += 1;
         mTextView.setText(String.valueOf(mNumber));
-        ApiManager.getAutoImage().enqueue(new Callback<ResponseBody>() {
+        CameraApiManager.getAutoImage().enqueue(new Callback<ResponseBody>() {
             @Override
             public void onResponse(@NonNull Call<ResponseBody> call, @NonNull Response<ResponseBody> response) {
                 ResponseBody responseBody = response.body();
@@ -119,13 +123,13 @@ public class MainActivity extends AppCompatActivity {
     }
 
     private void snapImage() {
-        ApiManager.snapImage().enqueue(new Callback<String>() {
+        CameraApiManager.snapImage().enqueue(new Callback<String>() {
             @Override
             public void onResponse(@NonNull Call<String> call, @NonNull Response<String> response) {
                 String body = response.body();
                 Log.e("result", body);
                 if ("[Succeed]get ok.".equalsIgnoreCase(body)) {
-                    ApiManager.getSnapImage().enqueue(new Callback<ResponseBody>() {
+                    CameraApiManager.getSnapImage().enqueue(new Callback<ResponseBody>() {
                         @Override
                         public void onResponse(@NonNull Call<ResponseBody> call, @NonNull Response<ResponseBody> response) {
                             ResponseBody responseBody = response.body();
