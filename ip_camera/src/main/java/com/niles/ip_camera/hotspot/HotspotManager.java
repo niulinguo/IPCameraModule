@@ -1,4 +1,4 @@
-package com.niles.ipcameramodule;
+package com.niles.ip_camera.hotspot;
 
 import java.io.BufferedReader;
 import java.io.FileNotFoundException;
@@ -70,5 +70,14 @@ public class HotspotManager {
 
     public List<HotspotClientInfo> getInfoList() {
         return mInfoList;
+    }
+
+    public HotspotClientInfo find(String mac) {
+        for (HotspotClientInfo clientInfo : mInfoList) {
+            if (mac.equalsIgnoreCase(clientInfo.getHWAddress())) {
+                return clientInfo;
+            }
+        }
+        return null;
     }
 }

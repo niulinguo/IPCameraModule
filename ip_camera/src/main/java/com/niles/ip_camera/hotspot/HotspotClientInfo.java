@@ -1,4 +1,4 @@
-package com.niles.ipcameramodule;
+package com.niles.ip_camera.hotspot;
 
 /**
  * Created by Niles

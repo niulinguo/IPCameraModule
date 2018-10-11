@@ -5,7 +5,6 @@ import android.graphics.BitmapFactory;
 import android.os.Bundle;
 import android.support.annotation.NonNull;
 import android.support.v7.app.AppCompatActivity;
-import android.text.TextUtils;
 import android.util.Log;
 import android.view.View;
 import android.widget.ImageView;
@@ -13,18 +12,15 @@ import android.widget.TextView;
 import android.widget.Toast;
 import android.widget.VideoView;
 
-import com.niles.http.HttpConfig;
-import com.niles.http.HttpManager;
-import com.niles.http.converter.StringConverterFactory;
 import com.niles.ip_camera.ApiManager;
 import com.niles.ip_camera.VideoStream;
 import com.niles.ip_camera.VideoStreamConfig;
+import com.niles.ip_camera.hotspot.HotspotClientInfo;
+import com.niles.ip_camera.hotspot.HotspotManager;
 
 import java.io.IOException;
-import java.util.List;
 
 import okhttp3.ResponseBody;
-import okhttp3.logging.HttpLoggingInterceptor;
 import retrofit2.Call;
 import retrofit2.Callback;
 import retrofit2.Response;
@@ -51,22 +47,15 @@ public class MainActivity extends AppCompatActivity {
 
         HotspotManager manager = new HotspotManager();
         manager.refresh();
+        HotspotClientInfo clientInfo = manager.find(MAC);
 
-        List<HotspotClientInfo> infoList = manager.getInfoList();
-
-        String ipAddress = null;
-
-        for (HotspotClientInfo info : infoList) {
-            if (MAC.equalsIgnoreCase(info.getHWAddress())) {
-                ipAddress = info.getIPAddress();
-            }
-        }
-
-        if (TextUtils.isEmpty(ipAddress)) {
+        if (clientInfo == null) {
             Toast.makeText(this, "没有找到IP_CAMERA", Toast.LENGTH_SHORT).show();
             finish();
             return;
         }
+
+        String ipAddress = clientInfo.getIPAddress();
 
         mTextView.setText(ipAddress);
 
