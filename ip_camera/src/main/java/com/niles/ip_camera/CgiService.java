@@ -19,4 +19,7 @@ public interface CgiService {
 
     @GET("/tmpfs/snap.jpg")
     Call<ResponseBody> getSnapImage(@QueryMap Map<String, String> options);
+
+    @GET("/tmpfs/auto.jpg")
+    Call<ResponseBody> getAutoImage(@QueryMap Map<String, String> options);
 }

@@ -11,11 +11,14 @@ import android.view.View;
 import android.widget.ImageView;
 import android.widget.TextView;
 import android.widget.Toast;
+import android.widget.VideoView;
 
 import com.niles.http.HttpConfig;
 import com.niles.http.HttpManager;
 import com.niles.http.converter.StringConverterFactory;
 import com.niles.ip_camera.ApiManager;
+import com.niles.ip_camera.VideoStream;
+import com.niles.ip_camera.VideoStreamConfig;
 
 import java.io.IOException;
 import java.util.List;
@@ -33,7 +36,9 @@ public class MainActivity extends AppCompatActivity {
     private TextView mTextView;
     private ImageView mImageView;
 
-//    private VideoView mVideoView;
+    private VideoView mVideoView;
+
+    private int mNumber;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -65,20 +70,20 @@ public class MainActivity extends AppCompatActivity {
 
         mTextView.setText(ipAddress);
 
-        HttpManager httpManager = MyApp.getInstance().getHttpManager();
-        httpManager.setHttpConfig(new HttpConfig.Builder()
-                .setBaseUrl("http://" + ipAddress)
-                .addConverterFactory(StringConverterFactory.create())
-                .setLogger(new HttpLoggingInterceptor.Logger() {
-                    @Override
-                    public void log(String message) {
-                        Log.e("http", message);
-                    }
-                })
-                .build());
-        ApiManager.setHttpManager(httpManager);
-        ApiManager.setUsername("admin");
-        ApiManager.setPassword("admin");
+//        HttpManager httpManager = MyApp.getInstance().getHttpManager();
+//        httpManager.setHttpConfig(new HttpConfig.Builder()
+//                .setBaseUrl("http://" + ipAddress)
+//                .addConverterFactory(StringConverterFactory.create())
+//                .setLogger(new HttpLoggingInterceptor.Logger() {
+//                    @Override
+//                    public void log(String message) {
+//                        Log.e("http", message);
+//                    }
+//                })
+//                .build());
+//        ApiManager.setHttpManager(httpManager);
+//        ApiManager.setUsername("admin");
+//        ApiManager.setPassword("admin");
 
 //        ApiManager.getHttpPort().enqueue(new Callback<String>() {
 //            @Override
@@ -92,27 +97,39 @@ public class MainActivity extends AppCompatActivity {
 //
 //            }
 //        });
+
+        mNumber = 0;
     }
 
-    public void onButtonClicked(View view) {
+    private void autoImage() {
+        mNumber += 1;
+        mTextView.setText(String.valueOf(mNumber));
+        ApiManager.getAutoImage().enqueue(new Callback<ResponseBody>() {
+            @Override
+            public void onResponse(@NonNull Call<ResponseBody> call, @NonNull Response<ResponseBody> response) {
+                ResponseBody responseBody = response.body();
+                if (responseBody != null) {
+                    try {
+                        byte[] bytes = responseBody.bytes();
+                        Bitmap bitmap = BitmapFactory.decodeByteArray(bytes, 0, bytes.length);
+                        mImageView.setImageBitmap(bitmap);
+                        autoImage();
+                    } catch (IOException e) {
+                        e.printStackTrace();
+                    }
+                } else {
+                    Log.e("http", "responseBody is null");
+                }
+            }
 
-//        String url = "http://" + mTextView.getText().toString() + "/livestream/11?action=play&media=video";
-//        url = "http://clips.vorwaerts-gmbh.de/big_buck_bunny.mp4";
-//        url = "http://ivi.bupt.edu.cn/hls/cctv5phd.m3u8";
-//        HashMap<String, String> headers = new HashMap<>();
-//        headers.put("User-Agent", "HiIpcam/V100R003 VodClient/1.0.0");
-//        headers.put("Connection", "Keep-Alive");
-//        headers.put("Cache-Control", "no-cache");
-//        headers.put("Authorization", "admin admin");
-//        headers.put("Content-Length", "65535");
-//        headers.put("Cseq", "1");
-//        headers.put("Transport", "RTP/AVP/TCP;unicast;interleaved=0-1");
-//        mVideoView.setVideoURI(Uri.parse(url), headers);
-//        mVideoView.set();
-//        mVideoView.setVideoURI(Uri.parse(url));
-//        mVideoView.start();
+            @Override
+            public void onFailure(@NonNull Call<ResponseBody> call, @NonNull Throwable t) {
+                Log.e("result", t.getMessage());
+            }
+        });
+    }
 
-
+    private void snapImage() {
         ApiManager.snapImage().enqueue(new Callback<String>() {
             @Override
             public void onResponse(@NonNull Call<String> call, @NonNull Response<String> response) {
@@ -149,5 +166,35 @@ public class MainActivity extends AppCompatActivity {
                 Log.e("result", t.getMessage());
             }
         });
+    }
+
+    public void onButtonClicked(View view) {
+
+//        String url = "http://" + mTextView.getText().toString() + "/livestream/11?action=play&media=video";
+//        url = "http://clips.vorwaerts-gmbh.de/big_buck_bunny.mp4";
+//        url = "http://ivi.bupt.edu.cn/hls/cctv5phd.m3u8";
+//        HashMap<String, String> headers = new HashMap<>();
+//        headers.put("User-Agent", "HiIpcam/V100R003 VodClient/1.0.0");
+//        headers.put("Connection", "Keep-Alive");
+//        headers.put("Cache-Control", "no-cache");
+//        headers.put("Authorization", "admin admin");
+//        headers.put("Content-Length", "65535");
+//        headers.put("Cseq", "1");
+//        headers.put("Transport", "RTP/AVP/TCP;unicast;interleaved=0-1");
+//        mVideoView.setVideoURI(Uri.parse(url), headers);
+//        mVideoView.set();
+//        mVideoView.setVideoURI(Uri.parse(url));
+//        mVideoView.start();
+
+        new Thread(new Runnable() {
+            @Override
+            public void run() {
+                VideoStream.test(new VideoStreamConfig.Builder()
+                        .setIP(mTextView.getText().toString())
+                        .build());
+            }
+        }).start();
+
+
     }
 }

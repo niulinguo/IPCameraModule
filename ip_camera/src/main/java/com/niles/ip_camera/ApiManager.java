@@ -57,6 +57,13 @@ public class ApiManager {
         return sHttpManager.createService(CgiService.class).getSnapImage(options);
     }
 
+    public static Call<ResponseBody> getAutoImage() {
+        HashMap<String, String> options = new LinkedHashMap<>();
+        options.put("-usr", sUsername);
+        options.put("-pwd", sPassword);
+        return sHttpManager.createService(CgiService.class).getAutoImage(options);
+    }
+
     public static Call<String> getHttpPort() {
         return paramCgi("gethttpport", null);
     }
