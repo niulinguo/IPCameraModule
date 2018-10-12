@@ -39,7 +39,7 @@ public class CameraApiManager {
         if (options != null && !options.isEmpty()) {
             newOptions.putAll(options);
         }
-        return sHttpManager.createService(CgiService.class).paramCgi(newOptions);
+        return sHttpManager.getService(CgiService.class).paramCgi(newOptions);
     }
 
     public static Call<String> getVideoAttr() {
@@ -54,14 +54,14 @@ public class CameraApiManager {
         HashMap<String, String> options = new LinkedHashMap<>();
         options.put("-usr", sUsername);
         options.put("-pwd", sPassword);
-        return sHttpManager.createService(CgiService.class).getSnapImage(options);
+        return sHttpManager.getService(CgiService.class).getSnapImage(options);
     }
 
     public static Call<ResponseBody> getAutoImage() {
         HashMap<String, String> options = new LinkedHashMap<>();
         options.put("-usr", sUsername);
         options.put("-pwd", sPassword);
-        return sHttpManager.createService(CgiService.class).getAutoImage(options);
+        return sHttpManager.getService(CgiService.class).getAutoImage(options);
     }
 
     public static Call<String> getHttpPort() {
