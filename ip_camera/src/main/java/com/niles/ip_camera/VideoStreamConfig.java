@@ -203,8 +203,12 @@ public class VideoStreamConfig {
                 throw new RuntimeException("IP Is Null");
             }
 
-            if (mDuration < 3 || mDuration > 30) {
-                throw new RuntimeException("Duration Error");
+            if (mDuration < 3) {
+                mDuration = 3;
+            }
+
+            if (mDuration > 30) {
+                mDuration = 30;
             }
 
             if (mVideoFile == null) {
