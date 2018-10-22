@@ -2,25 +2,30 @@ package com.niles.ipcameramodule;
 
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
+import android.os.Build;
 import android.os.Bundle;
+import android.os.Environment;
 import android.support.annotation.NonNull;
+import android.support.annotation.RequiresApi;
 import android.support.v7.app.AppCompatActivity;
 import android.util.Log;
+import android.view.SurfaceView;
 import android.view.View;
 import android.widget.ImageView;
 import android.widget.TextView;
 import android.widget.Toast;
-import android.widget.VideoView;
 
 import com.niles.http.HttpConfig;
 import com.niles.http.HttpManager;
 import com.niles.http.converter.StringConverterFactory;
 import com.niles.ip_camera.CameraApiManager;
+import com.niles.ip_camera.VideoResultCallback;
 import com.niles.ip_camera.VideoStream;
 import com.niles.ip_camera.VideoStreamConfig;
 import com.niles.ip_camera.hotspot.HotspotClientInfo;
 import com.niles.ip_camera.hotspot.HotspotManager;
 
+import java.io.File;
 import java.io.IOException;
 
 import okhttp3.ResponseBody;
@@ -36,7 +41,7 @@ public class MainActivity extends AppCompatActivity {
     private TextView mTextView;
     private ImageView mImageView;
 
-    private VideoView mVideoView;
+    private SurfaceView mSurfaceView;
 
     private int mNumber;
 
@@ -47,7 +52,7 @@ public class MainActivity extends AppCompatActivity {
 
         mTextView = findViewById(R.id.tv_text);
         mImageView = findViewById(R.id.iv_image);
-//        mVideoView = findViewById(R.id.vv_video);
+        mSurfaceView = findViewById(R.id.surface_view);
 
         HotspotManager manager = new HotspotManager();
         manager.refresh();
@@ -161,33 +166,35 @@ public class MainActivity extends AppCompatActivity {
         });
     }
 
+    @RequiresApi(api = Build.VERSION_CODES.JELLY_BEAN)
     public void onButtonClicked(View view) {
+        VideoStream.showVideo(new VideoStreamConfig.Builder()
+                .setIP(mTextView.getText().toString())
+                .setSurface(mSurfaceView.getHolder().getSurface())
+                .setDuration(10)
+                .setVideoFile(new File(new File(Environment.getExternalStorageDirectory(), "IPCamera"), "video.h264"))
+                .setVideoResultCallback(new VideoResultCallback() {
+                    @Override
+                    public void onFailure(final String message) {
+                        runOnUiThread(new Runnable() {
+                            @Override
+                            public void run() {
+                                Toast.makeText(MainActivity.this, message, Toast.LENGTH_SHORT).show();
+                            }
+                        });
+                    }
 
-//        String url = "http://" + mTextView.getText().toString() + "/livestream/11?action=play&media=video";
-//        url = "http://clips.vorwaerts-gmbh.de/big_buck_bunny.mp4";
-//        url = "http://ivi.bupt.edu.cn/hls/cctv5phd.m3u8";
-//        HashMap<String, String> headers = new HashMap<>();
-//        headers.put("User-Agent", "HiIpcam/V100R003 VodClient/1.0.0");
-//        headers.put("Connection", "Keep-Alive");
-//        headers.put("Cache-Control", "no-cache");
-//        headers.put("Authorization", "admin admin");
-//        headers.put("Content-Length", "65535");
-//        headers.put("Cseq", "1");
-//        headers.put("Transport", "RTP/AVP/TCP;unicast;interleaved=0-1");
-//        mVideoView.setVideoURI(Uri.parse(url), headers);
-//        mVideoView.set();
-//        mVideoView.setVideoURI(Uri.parse(url));
-//        mVideoView.start();
-
-        new Thread(new Runnable() {
-            @Override
-            public void run() {
-                VideoStream.test(new VideoStreamConfig.Builder()
-                        .setIP(mTextView.getText().toString())
-                        .build());
-            }
-        }).start();
-
-        snapImage();
+                    @Override
+                    public void onSuccess(final File videoFile) {
+                        runOnUiThread(new Runnable() {
+                            @Override
+                            public void run() {
+                                Toast.makeText(MainActivity.this, videoFile.getAbsolutePath(), Toast.LENGTH_SHORT).show();
+                            }
+                        });
+                    }
+                })
+                .build());
+//        snapImage();
     }
 }

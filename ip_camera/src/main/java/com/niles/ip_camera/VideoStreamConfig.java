@@ -1,6 +1,9 @@
 package com.niles.ip_camera;
 
 import android.text.TextUtils;
+import android.view.Surface;
+
+import java.io.File;
 
 /**
  * Created by Niles
@@ -15,14 +18,38 @@ public class VideoStreamConfig {
     private final String mStreamType;
     private final String mUsername;
     private final String mPassword;
+    private final Surface mSurface;
+    private final int mDuration;
+    private final File mVideoFile;
+    private final VideoResultCallback mVideoResultCallback;
 
-    private VideoStreamConfig(String IP, int port, int channel, String streamType, String username, String password) {
+    private VideoStreamConfig(String IP, int port, int channel, String streamType, String username, String password, Surface surface, int duration, File videoFile, VideoResultCallback videoResultCallback) {
         mIP = IP;
         mPort = port;
         mChannel = channel;
         mStreamType = streamType;
         mUsername = username;
         mPassword = password;
+        mSurface = surface;
+        mDuration = duration;
+        mVideoFile = videoFile;
+        mVideoResultCallback = videoResultCallback;
+    }
+
+    public VideoResultCallback getVideoResultCallback() {
+        return mVideoResultCallback;
+    }
+
+    public Surface getSurface() {
+        return mSurface;
+    }
+
+    public File getVideoFile() {
+        return mVideoFile;
+    }
+
+    public int getDuration() {
+        return mDuration;
     }
 
     public String getIP() {
@@ -57,6 +84,10 @@ public class VideoStreamConfig {
         private String mStreamType = "video";
         private String mUsername = "admin";
         private String mPassword = "admin";
+        private Surface mSurface;
+        private int mDuration;
+        private File mVideoFile;
+        private VideoResultCallback mVideoResultCallback;
 
         public String getIP() {
             return mIP;
@@ -64,6 +95,42 @@ public class VideoStreamConfig {
 
         public Builder setIP(String IP) {
             mIP = IP;
+            return this;
+        }
+
+        public VideoResultCallback getVideoResultCallback() {
+            return mVideoResultCallback;
+        }
+
+        public Builder setVideoResultCallback(VideoResultCallback videoResultCallback) {
+            mVideoResultCallback = videoResultCallback;
+            return this;
+        }
+
+        public File getVideoFile() {
+            return mVideoFile;
+        }
+
+        public Builder setVideoFile(File videoFile) {
+            mVideoFile = videoFile;
+            return this;
+        }
+
+        public int getDuration() {
+            return mDuration;
+        }
+
+        public Builder setDuration(int duration) {
+            mDuration = duration;
+            return this;
+        }
+
+        public Surface getSurface() {
+            return mSurface;
+        }
+
+        public Builder setSurface(Surface surface) {
+            mSurface = surface;
             return this;
         }
 
@@ -122,7 +189,11 @@ public class VideoStreamConfig {
                     mChannel,
                     mStreamType,
                     mUsername,
-                    mPassword
+                    mPassword,
+                    mSurface,
+                    mDuration,
+                    mVideoFile,
+                    mVideoResultCallback
             );
         }
 
@@ -132,6 +203,17 @@ public class VideoStreamConfig {
                 throw new RuntimeException("IP Is Null");
             }
 
+            if (mDuration < 3 || mDuration > 30) {
+                throw new RuntimeException("Duration Error");
+            }
+
+            if (mVideoFile == null) {
+                throw new RuntimeException("Video File Is Null");
+            }
+
+            if (mVideoResultCallback == null) {
+                throw new RuntimeException("Video Result Callback Is Null");
+            }
         }
     }
 }
