@@ -1,5 +1,6 @@
 package com.niles.ipcameramodule;
 
+import android.Manifest;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.os.Build;
@@ -15,6 +16,9 @@ import android.widget.ImageView;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import com.blankj.utilcode.constant.PermissionConstants;
+import com.blankj.utilcode.util.FileIOUtils;
+import com.blankj.utilcode.util.PermissionUtils;
 import com.niles.http.HttpConfig;
 import com.niles.http.HttpManager;
 import com.niles.http.converter.StringConverterFactory;
@@ -27,6 +31,8 @@ import com.niles.ip_camera.hotspot.HotspotManager;
 
 import java.io.File;
 import java.io.IOException;
+import java.io.InputStream;
+import java.util.HashMap;
 
 import okhttp3.ResponseBody;
 import okhttp3.logging.HttpLoggingInterceptor;
@@ -49,6 +55,25 @@ public class MainActivity extends AppCompatActivity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
+
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
+            if (!PermissionUtils.isGranted(Manifest.permission.WRITE_EXTERNAL_STORAGE, Manifest.permission.READ_EXTERNAL_STORAGE)) {
+                PermissionUtils.permission(PermissionConstants.STORAGE)
+                        .callback(new PermissionUtils.SimpleCallback() {
+                            @Override
+                            public void onGranted() {
+
+                            }
+
+                            @Override
+                            public void onDenied() {
+                                finish();
+                            }
+                        })
+                        .request();
+            }
+        }
+
 
         mTextView = findViewById(R.id.tv_text);
         mImageView = findViewById(R.id.iv_image);
@@ -83,18 +108,7 @@ public class MainActivity extends AppCompatActivity {
         CameraApiManager.setUsername("admin");
         CameraApiManager.setPassword("admin");
 
-//        CameraApiManager.getHttpPort().enqueue(new Callback<String>() {
-//            @Override
-//            public void onResponse(Call<String> call, Response<String> response) {
-//                String body = response.body();
-//                Log.e("result", body);
-//            }
-//
-//            @Override
-//            public void onFailure(Call<String> call, Throwable t) {
-//
-//            }
-//        });
+        getImageAttr();
 
         mNumber = 0;
     }
@@ -139,13 +153,11 @@ public class MainActivity extends AppCompatActivity {
                         public void onResponse(@NonNull Call<ResponseBody> call, @NonNull Response<ResponseBody> response) {
                             ResponseBody responseBody = response.body();
                             if (responseBody != null) {
-                                try {
-                                    byte[] bytes = responseBody.bytes();
-                                    Bitmap bitmap = BitmapFactory.decodeByteArray(bytes, 0, bytes.length);
-                                    mImageView.setImageBitmap(bitmap);
-                                } catch (IOException e) {
-                                    e.printStackTrace();
-                                }
+                                InputStream inputStream = responseBody.byteStream();
+                                File imageFile = getImageFile();
+                                FileIOUtils.writeFileFromIS(imageFile, inputStream);
+                                Bitmap bitmap = BitmapFactory.decodeFile(imageFile.getAbsolutePath());
+                                mImageView.setImageBitmap(bitmap);
                             } else {
                                 Log.e("http", "responseBody is null");
                             }
@@ -166,8 +178,24 @@ public class MainActivity extends AppCompatActivity {
         });
     }
 
-    @RequiresApi(api = Build.VERSION_CODES.JELLY_BEAN)
+    private File getImageFile() {
+        File dir = new File(Environment.getExternalStorageDirectory(), "IPCamera");
+        if (!dir.exists() && !dir.mkdirs()) {
+            throw new RuntimeException("创建文件夹失败");
+        }
+        File file = new File(dir, System.currentTimeMillis() + ".jpg");
+        if (file.exists() && !file.delete()) {
+            throw new RuntimeException("文件删除失败");
+        }
+        return file;
+    }
+
     public void onButtonClicked(View view) {
+        snapImage();
+    }
+
+    @RequiresApi(api = Build.VERSION_CODES.JELLY_BEAN)
+    private void showVideo() {
         VideoStream.showVideo(new VideoStreamConfig.Builder()
                 .setIP(mTextView.getText().toString())
                 .setSurface(mSurfaceView.getHolder().getSurface())
@@ -195,6 +223,38 @@ public class MainActivity extends AppCompatActivity {
                     }
                 })
                 .build());
-//        snapImage();
+    }
+
+    private void setImageAttr() {
+        HashMap<String, String> paramMap = new HashMap<>();
+        paramMap.put("-flip", "on");
+        paramMap.put("-mirror", "on");
+        CameraApiManager.setImageAttr(paramMap).enqueue(new Callback<String>() {
+            @Override
+            public void onResponse(@NonNull Call<String> call, @NonNull Response<String> response) {
+                String body = response.body();
+                Log.e("result", body);
+            }
+
+            @Override
+            public void onFailure(@NonNull Call<String> call, @NonNull Throwable t) {
+
+            }
+        });
+    }
+
+    private void getImageAttr() {
+        CameraApiManager.getImageAttr().enqueue(new Callback<String>() {
+            @Override
+            public void onResponse(@NonNull Call<String> call, @NonNull Response<String> response) {
+                String body = response.body();
+                Log.e("result", body);
+            }
+
+            @Override
+            public void onFailure(@NonNull Call<String> call, @NonNull Throwable t) {
+
+            }
+        });
     }
 }

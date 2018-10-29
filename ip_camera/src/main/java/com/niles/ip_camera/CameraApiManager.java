@@ -67,4 +67,12 @@ public class CameraApiManager {
     public static Call<String> getHttpPort() {
         return paramCgi("gethttpport", null);
     }
+
+    public static Call<String> getImageAttr() {
+        return paramCgi("getimageattr", null);
+    }
+
+    public static Call<String> setImageAttr(HashMap<String, String> paramMap) {
+        return paramCgi("setimageattr", paramMap);
+    }
 }
